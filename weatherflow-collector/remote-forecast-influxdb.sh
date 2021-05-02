@@ -157,8 +157,8 @@ station_name_escaped=$(echo "${station_name_escaped}" | sed 's/=/\\=/g')
 
 ## Current Conditions
 
-conditions=$(echo "${line}" |jq -r ".current_conditions.conditions")
-icon=$(echo "${line}" |jq -r ".current_conditions.icon")
+conditions=$(echo "${line}" | jq -r ".current_conditions.conditions")
+icon=$(echo "${line}" | jq -r ".current_conditions.icon")
 
 if [ "$debug" == "true" ]
 then
@@ -190,7 +190,7 @@ daily_start=$(date +%s%N)
 ## Start "threading"
 ##
 
-num_of_days=$(echo "${line}" |jq -r ".forecast.daily | length")
+num_of_days=$(echo "${line}" | jq -r ".forecast.daily | length")
 
 if [ "$debug" == "true" ]
 then
@@ -205,16 +205,16 @@ for day in $(seq 0 $num_of_days_minus_one) ; do
 
 (
 
-air_temp_high=$(echo "${line}" |jq -r ".forecast.daily | .[$day].air_temp_high")
-air_temp_low=$(echo "${line}" |jq -r ".forecast.daily | .[$day].air_temp_low")
-conditions=$(echo "${line}" |jq -r ".forecast.daily | .[$day].conditions")
-day_num=$(echo "${line}" |jq -r ".forecast.daily | .[$day].day_num")
-day_start_local=$(echo "${line}" |jq -r ".forecast.daily | .[$day].day_start_local")
-icon=$(echo "${line}" |jq -r ".forecast.daily | .[$day].icon")
-month_num=$(echo "${line}" |jq -r ".forecast.daily | .[$day].month_num")
-precip_probability=$(echo "${line}" |jq -r ".forecast.daily | .[$day].precip_probability")
-sunrise=$(echo "${line}" |jq -r ".forecast.daily | .[$day].sunrise")
-sunset=$(echo "${line}" |jq -r ".forecast.daily | .[$day].sunset")
+air_temp_high=$(echo "${line}" | jq -r ".forecast.daily | .[$day].air_temp_high")
+air_temp_low=$(echo "${line}" | jq -r ".forecast.daily | .[$day].air_temp_low")
+conditions=$(echo "${line}" | jq -r ".forecast.daily | .[$day].conditions")
+day_num=$(echo "${line}" | jq -r ".forecast.daily | .[$day].day_num")
+day_start_local=$(echo "${line}" | jq -r ".forecast.daily | .[$day].day_start_local")
+icon=$(echo "${line}" | jq -r ".forecast.daily | .[$day].icon")
+month_num=$(echo "${line}" | jq -r ".forecast.daily | .[$day].month_num")
+precip_probability=$(echo "${line}" | jq -r ".forecast.daily | .[$day].precip_probability")
+sunrise=$(echo "${line}" | jq -r ".forecast.daily | .[$day].sunrise")
+sunset=$(echo "${line}" | jq -r ".forecast.daily | .[$day].sunset")
 
 ## Add 86399 seconds to provide end of day data points if viewing graphs after midnight
 
@@ -251,6 +251,7 @@ weatherflow_forecast_daily,collector_type=${collector_type},elevation=${elevatio
 weatherflow_forecast_daily,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${day_num},forecast_month_num=${month_num},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} air_temp_low=${air_temp_low} ${day_start_local_eod}000000000
 weatherflow_forecast_daily,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${day_num},forecast_month_num=${month_num},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} conditions=\"${conditions}\" ${day_start_local_eod}000000000
 weatherflow_forecast_daily,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${day_num},forecast_month_num=${month_num},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} day_num=${day_num} ${day_start_local_eod}000000000
+weatherflow_forecast_daily,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${day_num},forecast_month_num=${month_num},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} day_start_local=${day_start_local}000 ${day_start_local_eod}000000000
 weatherflow_forecast_daily,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${day_num},forecast_month_num=${month_num},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} icon=\"${icon}\" ${day_start_local_eod}000000000
 weatherflow_forecast_daily,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${day_num},forecast_month_num=${month_num},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} month_num=${month_num} ${day_start_local_eod}000000000
 weatherflow_forecast_daily,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${day_num},forecast_month_num=${month_num},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} precip_probability=${precip_probability} ${day_start_local_eod}000000000
@@ -303,7 +304,12 @@ wait
 daily_end=$(date +%s%N)
 daily_duration=$((daily_end-daily_start))
 
+if [ "$debug" == "true" ]
+then
+
 echo "daily_duration:${daily_duration}"
+
+fi
 
 ##
 ## Send Timer Metrics To InfluxDB
@@ -334,9 +340,7 @@ hourly_start=$(date +%s%N)
 ## Start "threading"
 ##
 
-N=4
-
-num_of_hours=$(echo "${line}" |jq -r ".forecast.hourly | length")
+num_of_hours=$(echo "${line}" | jq -r ".forecast.hourly | length")
 
 if [ "$debug" == "true" ]
 then
@@ -351,24 +355,78 @@ for hour in $(seq 0 $num_of_hours_minus_one) ; do
 
 (
 
-air_temperature=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].air_temperature")
-conditions=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].conditions")
-feels_like=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].feels_like")
-icon=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].icon")
-local_day=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].local_day")
-local_hour=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].local_hour")
-precip=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].precip")
-precip_icon=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].precip_icon")
-precip_probability=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].precip_probability")
-precip_type=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].precip_type")
-relative_humidity=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].relative_humidity")
-sea_level_pressure=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].sea_level_pressure")
-time=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].time")
-uv=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].uv")
-wind_avg=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].wind_avg")
-wind_direction=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].wind_direction")
-wind_direction_cardinal=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].wind_direction_cardinal")
-wind_gust=$(echo "${line}" |jq -r ".forecast.hourly | .[$hour].wind_gust")
+air_temperature=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].air_temperature")
+conditions=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].conditions")
+feels_like=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].feels_like")
+icon=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].icon")
+local_day=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].local_day")
+local_hour=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].local_hour")
+precip=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].precip")
+precip_icon=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].precip_icon")
+precip_probability=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].precip_probability")
+precip_type=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].precip_type")
+relative_humidity=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].relative_humidity")
+sea_level_pressure=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].sea_level_pressure")
+time=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].time")
+uv=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].uv")
+wind_avg=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].wind_avg")
+wind_direction=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].wind_direction")
+wind_direction_cardinal=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].wind_direction_cardinal")
+wind_gust=$(echo "${line}" | jq -r ".forecast.hourly | .[$hour].wind_gust")
+
+##
+## Calculate Number of Days out for the Forecast
+##
+
+if [[ $hour -ge "0" ]] && [[ $hour -le "23" ]]
+then
+forecast_hourly_days_out="0"
+fi
+
+if [[ $hour -ge "24" ]] && [[ $hour -le "47" ]]
+then
+forecast_hourly_days_out="1"
+fi
+
+if [[ $hour -ge "48" ]] && [[ $hour -le "71" ]]
+then
+forecast_hourly_days_out="2"
+fi
+
+if [[ $hour -ge "72" ]] && [[ $hour -le "95" ]]
+then
+forecast_hourly_days_out="3"
+fi
+
+if [[ $hour -ge "96" ]] && [[ $hour -le "119" ]]
+then
+forecast_hourly_days_out="4"
+fi
+
+if [[ $hour -ge "120" ]] && [[ $hour -le "143" ]]
+then
+forecast_hourly_days_out="5"
+fi
+
+if [[ $hour -ge "144" ]] && [[ $hour -le "167" ]]
+then
+forecast_hourly_days_out="6"
+fi
+
+if [[ $hour -ge "168" ]] && [[ $hour -le "191" ]]
+then
+forecast_hourly_days_out="7"
+fi
+
+if [[ $hour -ge "192" ]] && [[ $hour -le "215" ]]
+then
+forecast_hourly_days_out="8"
+fi
+
+if [[ $hour -ge "216" ]] && [[ $hour -le "240" ]]
+then
+forecast_hourly_days_out="9"
+fi
 
 if [ "$debug" == "true" ]
 then
@@ -421,22 +479,23 @@ printf -v local_day_padded "%02d" "${local_day}"
 #fi
 
 curl "${curl[@]}" -i -XPOST "${influxdb_url}" -u "${influxdb_username}":"${influxdb_password}" --data-binary "
-weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} air_temperature=${air_temperature} ${time}000000000
-weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} conditions=\"${conditions}\" ${time}000000000
-weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} feels_like=${feels_like} ${time}000000000
-weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} icon=\"${icon}\" ${time}000000000
-weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} local_day=${local_day} ${time}000000000
-weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} local_day_padded=\"${local_day_padded}\" ${time}000000000
-weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} local_hour=${local_hour} ${time}000000000
-weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} precip=${precip} ${time}000000000
-weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} precip_probability=${precip_probability} ${time}000000000
-weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} relative_humidity=${relative_humidity} ${time}000000000
-weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} sea_level_pressure=${sea_level_pressure} ${time}000000000
-weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} uv=${uv} ${time}000000000
-weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} wind_avg=${wind_avg} ${time}000000000
-weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} wind_direction=${wind_direction} ${time}000000000
-weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} wind_direction_cardinal=\"${wind_direction_cardinal}\" ${time}000000000
-weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} wind_gust=${wind_gust} ${time}000000000"
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} air_temperature=${air_temperature} ${time}000000000
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} conditions=\"${conditions}\" ${time}000000000
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} feels_like=${feels_like} ${time}000000000
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} icon=\"${icon}\" ${time}000000000
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} local_day=${local_day} ${time}000000000
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} local_day_padded=\"${local_day_padded}\" ${time}000000000
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} local_hour=${local_hour} ${time}000000000
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} precip=${precip} ${time}000000000
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} precip_probability=${precip_probability} ${time}000000000
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} relative_humidity=${relative_humidity} ${time}000000000
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} sea_level_pressure=${sea_level_pressure} ${time}000000000
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} uv=${uv} ${time}000000000
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} time=${time}000 ${time}000000000
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} wind_avg=${wind_avg} ${time}000000000
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} wind_direction=${wind_direction} ${time}000000000
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} wind_direction_cardinal=\"${wind_direction_cardinal}\" ${time}000000000
+weatherflow_forecast_hourly,collector_type=${collector_type},elevation=${elevation},forecast_day_num=${local_day},forecast_day_num_padded=${local_day_padded},forecast_hour_num=${local_hour},forecast_hourly_days_out=${forecast_hourly_days_out},latitude=${latitude},longitude=${longitude},public_name=${public_name_escaped},source=${function},station_id=${station_id},station_name=${station_name_escaped},timezone=${timezone} wind_gust=${wind_gust} ${time}000000000"
 
 ) &
 
@@ -460,7 +519,12 @@ wait
 hourly_end=$(date +%s%N)
 hourly_duration=$((hourly_end-hourly_start))
 
+if [ "$debug" == "true" ]
+then
+
 echo "hourly_duration:${hourly_duration}"
+
+fi
 
 ## Send Timer Metrics To InfluxDB
 
